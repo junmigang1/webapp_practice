@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>공지 통합 대시보드</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --primary: #4F46E5;
+    --primary-light: #6366F1;
+    --accent: #0891B2;
+    --accent2: #059669;
+    --warn: #D97706;
+    --danger: #DC2626;
+    --bg: #F1F5F9;
+    --bg2: #FFFFFF;
+    --card: #FFFFFF;
+    --card2: #F8FAFC;
+    --border: #CBD5E1;
+    --text: #0F172A;
+    --text2: #475569;
+    --text3: #94A3B8;
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  .hidden { display: none !important; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+  /* ── Nav ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    height: 56px;
+    background: rgba(255,255,255,0.97);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 1.5rem;
+  }
+  .nav-logo {
+    font-weight: 700; font-size: 1rem; color: var(--primary-light);
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .nav-actions { display: flex; gap: 0.5rem; }
+  .btn-icon {
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--text2); border-radius: 8px;
+    padding: 0.4rem 0.9rem; font-size: 0.82rem; cursor: pointer;
+    transition: all 0.15s; white-space: nowrap;
+  }
+  .btn-icon:hover { background: var(--card2); color: var(--text); }
+  .btn-icon:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ── Setup Screen ── */
+  #setup-screen {
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 80px 1.5rem 2rem;
+    background: linear-gradient(180deg, #EEF2FF 0%, #F1F5F9 100%);
+  }
+  .setup-icon { font-size: 3rem; margin-bottom: 1rem; }
+  .setup-title { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 0.5rem; }
+  .setup-sub { color: var(--text2); font-size: 0.95rem; margin-bottom: 2.5rem; text-align: center; }
+  .setup-card {
+    width: 100%; max-width: 480px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .setup-card-title {
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--primary-light);
+    margin-bottom: 1rem;
+  }
+  .input-row { display: flex; gap: 0.5rem; }
+  input[type="text"], input[type="url"] {
+    background: #FFFFFF; border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px;
+    padding: 0.6rem 0.9rem; font-size: 0.88rem;
+    width: 100%; outline: none;
+    transition: border-color 0.15s;
+  }
+  input[type="text"]:focus, input[type="url"]:focus { border-color: var(--primary-light); }
+  input::placeholder { color: var(--text3); }
+  .btn-primary {
+    background: var(--primary); color: #fff;
+    border: none; border-radius: 8px;
+    padding: 0.6rem 1.2rem; font-size: 0.88rem; font-weight: 600;
+    cursor: pointer; white-space: nowrap; transition: background 0.15s;
+  }
+  .btn-primary:hover { background: #4338CA; }
+  .btn-start {
+    width: 100%; max-width: 480px;
+    background: linear-gradient(135deg, var(--primary), #6366F1);
+    color: #fff; border: none; border-radius: 12px;
+    padding: 0.9rem; font-size: 1rem; font-weight: 700;
+    cursor: pointer; margin-top: 0.5rem; transition: opacity 0.15s;
+  }
+  .btn-start:hover { opacity: 0.9; }
+  .setup-row { margin-bottom: 0.75rem; }
+  .setup-row:last-child { margin-bottom: 0; }
+
+  /* ── App Screen ── */
+  #app-screen {
+    padding-top: 56px;
+  }
+
+  /* Status bar */
+  #status-bar {
+    background: var(--bg2); border-bottom: 1px solid var(--border);
+    padding: 0.5rem 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 0.8rem;
+  }
+  #status-text { color: var(--text3); }
+  #status-text.status-loading { color: var(--warn); }
+  #status-text.status-success { color: var(--accent2); }
+  #status-text.status-error { color: var(--danger); }
+  #status-text.status-warn { color: var(--warn); }
+  #notice-count { color: var(--text2); font-weight: 600; }
+
+  /* Site chips */
+  #site-chips-bar {
+    padding: 0.75rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  #site-chips-container { display: inline-flex; gap: 0.5rem; align-items: center; }
+  .site-chip {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--text2); border-radius: 999px;
+    padding: 0.3rem 0.75rem; font-size: 0.78rem; cursor: default;
+    white-space: nowrap; transition: border-color 0.15s;
+  }
+  .site-chip.add-chip {
+    border-color: rgba(79,70,229,0.4); color: var(--primary-light);
+    cursor: pointer;
+  }
+  .site-chip.add-chip:hover { background: rgba(79,70,229,0.1); }
+  .chip-remove {
+    background: none; border: none; color: var(--text3);
+    cursor: pointer; font-size: 1rem; line-height: 1;
+    padding: 0; display: flex; align-items: center;
+  }
+  .chip-remove:hover { color: var(--danger); }
+
+  /* Category tabs */
+  #category-tabs-bar {
+    padding: 0 1.5rem;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    display: flex;
+  }
+  #category-tabs-container { display: flex; gap: 0; }
+  .cat-tab {
+    background: none; border: none; border-bottom: 2px solid transparent;
+    color: var(--text3); padding: 0.75rem 1rem;
+    font-size: 0.85rem; cursor: pointer; white-space: nowrap;
+    display: flex; align-items: center; gap: 0.4rem;
+    transition: all 0.15s;
+  }
+  .cat-tab:hover { color: var(--text2); }
+  .cat-tab.active { color: var(--primary-light); border-bottom-color: var(--primary-light); font-weight: 600; }
+  .tab-count {
+    background: var(--card2); color: var(--text3);
+    border-radius: 999px; padding: 0.1rem 0.45rem;
+    font-size: 0.72rem;
+  }
+  .cat-tab.active .tab-count { background: rgba(79,70,229,0.2); color: var(--primary-light); }
+
+  /* Notices grid */
+  #notices-container {
+    padding: 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  #notices-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1rem;
+  }
+
+  /* Empty / Loading states */
+  #empty-state, #loading-state {
+    grid-column: 1 / -1;
+    text-align: center; padding: 4rem 2rem;
+    color: var(--text3);
+  }
+  #empty-state .empty-icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
+  .spinner {
+    width: 36px; height: 36px; margin: 0 auto 1rem;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary-light);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Notice cards */
+  .notice-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 1.25rem;
+    cursor: pointer; transition: all 0.15s;
+    display: flex; flex-direction: column; gap: 0.6rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .notice-card:hover {
+    border-color: rgba(79,70,229,0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+  .card-top {
+    display: flex; align-items: center; gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .badge-new {
+    background: var(--primary); color: #fff;
+    border-radius: 4px; padding: 0.1rem 0.4rem;
+    font-size: 0.65rem; font-weight: 700; letter-spacing: 0.5px;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+  .card-source { color: var(--text3); font-size: 0.75rem; margin-left: auto; }
+  .card-title {
+    font-weight: 700; font-size: 0.95rem; line-height: 1.4;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .card-summary {
+    color: var(--text2); font-size: 0.82rem; line-height: 1.5;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .card-bottom {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: auto; padding-top: 0.5rem;
+    border-top: 1px solid var(--border);
+  }
+  .card-deadline { color: var(--text3); font-size: 0.78rem; }
+  .card-deadline.urgent { color: var(--danger); font-weight: 600; }
+  .card-actions { display: flex; gap: 0.4rem; }
+  .btn-cal, .btn-link {
+    background: var(--card2); border: 1px solid var(--border);
+    color: var(--text2); border-radius: 6px;
+    padding: 0.3rem 0.65rem; font-size: 0.75rem; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-cal:hover { background: rgba(79,70,229,0.2); border-color: var(--primary-light); color: var(--primary-light); }
+  .btn-link:hover { background: rgba(6,182,212,0.15); border-color: var(--accent); color: var(--accent); }
+
+  /* Category tags */
+  .cat-tag {
+    display: inline-block; padding: 0.15rem 0.55rem;
+    border-radius: 6px; font-size: 0.72rem; font-weight: 600;
+  }
+  .cat-창업 { background: rgba(79,70,229,0.15); color: var(--primary-light); }
+  .cat-취업 { background: rgba(6,182,212,0.15); color: var(--accent); }
+  .cat-장학금 { background: rgba(245,158,11,0.15); color: var(--warn); }
+  .cat-교내행사 { background: rgba(16,185,129,0.15); color: var(--accent2); }
+  .cat-공모전 { background: rgba(239,68,68,0.15); color: var(--danger); }
+  .cat-기타 { background: rgba(100,116,139,0.15); color: var(--text3); }
+
+  /* ── Modals ── */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 1rem;
+  }
+  .modal-box {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 16px; width: 100%; max-width: 520px;
+    max-height: 90vh; overflow-y: auto;
+    padding: 1.75rem;
+  }
+  .modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+  .modal-title { font-size: 1.1rem; font-weight: 700; }
+  .btn-close {
+    background: none; border: none; color: var(--text3);
+    font-size: 1.4rem; cursor: pointer; line-height: 1;
+    padding: 0.2rem;
+  }
+  .btn-close:hover { color: var(--text); }
+  .modal-section { margin-bottom: 1.5rem; }
+  .modal-section:last-child { margin-bottom: 0; }
+  .modal-section-label {
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--text3);
+    margin-bottom: 0.75rem;
+  }
+
+  /* Settings site list */
+  .settings-site-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.75rem; background: var(--card); border-radius: 10px;
+    margin-bottom: 0.5rem; gap: 0.75rem;
+  }
+  .site-info { flex: 1; min-width: 0; }
+  .site-name { font-weight: 600; font-size: 0.88rem; }
+  .site-url { color: var(--text3); font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .btn-remove-site {
+    background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+    color: var(--danger); border-radius: 6px;
+    padding: 0.3rem 0.65rem; font-size: 0.75rem; cursor: pointer;
+    white-space: nowrap; transition: all 0.15s; flex-shrink: 0;
+  }
+  .btn-remove-site:hover { background: rgba(239,68,68,0.2); }
+  .empty-sites { color: var(--text3); font-size: 0.85rem; text-align: center; padding: 1rem; }
+
+  .btn-danger {
+    background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+    color: var(--danger); border-radius: 8px;
+    padding: 0.6rem 1rem; font-size: 0.85rem; cursor: pointer;
+    transition: all 0.15s; width: 100%;
+  }
+  .btn-danger:hover { background: rgba(239,68,68,0.2); }
+
+  /* Detail modal */
+  .detail-modal-box {
+    max-width: 640px;
+  }
+  #detail-category { margin-bottom: 0.75rem; }
+  #detail-title { font-size: 1.2rem; font-weight: 800; line-height: 1.4; margin-bottom: 0.75rem; }
+  #detail-meta { color: var(--text3); font-size: 0.82rem; margin-bottom: 1.25rem; }
+  #detail-summary { color: var(--text2); font-size: 0.92rem; line-height: 1.7; margin-bottom: 1.5rem; }
+  .detail-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+  .btn-action {
+    flex: 1; min-width: 120px;
+    padding: 0.75rem 1rem; border-radius: 10px;
+    font-size: 0.88rem; font-weight: 600; cursor: pointer;
+    transition: all 0.15s; border: 1px solid transparent;
+    text-align: center;
+  }
+  .btn-action-primary {
+    background: var(--primary); color: #fff; border-color: var(--primary);
+  }
+  .btn-action-primary:hover { background: #4338CA; }
+  .btn-action-secondary {
+    background: var(--card2); color: var(--text2); border-color: var(--border);
+  }
+  .btn-action-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── App Layout (sidebar + main) ── */
+  #app-layout {
+    display: flex;
+    min-height: calc(100vh - 56px);
+  }
+  #sites-sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border);
+    background: var(--bg2);
+    padding: 1rem;
+    position: sticky;
+    top: 56px;
+    height: calc(100vh - 56px);
+    overflow-y: auto;
+  }
+  #sites-sidebar h3 {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 0.75rem;
+  }
+  .sidebar-site-item {
+    padding: 0.65rem 0.75rem;
+    border-radius: 10px;
+    margin-bottom: 0.4rem;
+    cursor: default;
+    border: 1px solid var(--border);
+    background: var(--card2);
+  }
+  .sidebar-site-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text);
+    margin-bottom: 0.2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sidebar-site-url {
+    font-size: 0.7rem;
+    color: var(--text3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sidebar-site-meta {
+    font-size: 0.7rem;
+    color: var(--text3);
+    margin-top: 0.3rem;
+  }
+  .sidebar-empty {
+    font-size: 0.82rem;
+    color: var(--text3);
+    text-align: center;
+    padding: 1rem 0;
+  }
+  #main-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    #notices-grid { grid-template-columns: 1fr; }
+    nav { padding: 0 1rem; }
+    .btn-icon span { display: none; }
+    #notices-container { padding: 1rem; }
+    #site-chips-bar, #category-tabs-bar { padding: 0.75rem 1rem; }
+    #sites-sidebar { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Nav ─────────────────────────────────────────────────────────────────── -->
+<nav>
+  <div class="nav-logo">📋 공지 통합 대시보드</div>
+  <div class="nav-actions">
+    <button class="btn-icon" id="btn-refresh">🔄 <span>새로고침</span></button>
+    <button class="btn-icon" id="btn-settings">⚙️ <span>설정</span></button>
+  </div>
+</nav>
+
+<!-- ── Setup Screen ─────────────────────────────────────────────────────────── -->
+<div id="setup-screen">
+  <div class="setup-icon">🤖</div>
+  <div class="setup-title">시작하기</div>
+  <p class="setup-sub">OpenRouter API 키를 입력하고 첫 번째 사이트를 등록해보세요</p>
+
+  <!-- Step 1: API Key -->
+  <div class="setup-card">
+    <div class="setup-card-title">Step 1 · OpenRouter API 키</div>
+    <div class="input-row">
+      <input type="text" id="setup-apikey" placeholder="sk-or-..." data-placeholder="sk-or-...">
+      <button class="btn-primary" id="btn-save-apikey">저장</button>
+    </div>
+  </div>
+
+  <!-- Step 2: Add Site (hidden until API key saved) -->
+  <div class="setup-card hidden" id="setup-site-step">
+    <div class="setup-card-title">Step 2 · 사이트 등록</div>
+    <div class="setup-row">
+      <input type="url" id="setup-url" placeholder="https://example.com/notice" data-placeholder="https://example.com/notice">
+    </div>
+    <div class="input-row">
+      <input type="text" id="setup-name" placeholder="사이트 이름 (예: 서울대 공지)" data-placeholder="사이트 이름 (예: 서울대 공지)">
+      <button class="btn-primary" id="btn-add-setup-site">추가</button>
+    </div>
+  </div>
+
+  <button class="btn-start" id="btn-start">시작하기 →</button>
+</div>
+
+<!-- ── App Screen ──────────────────────────────────────────────────────────── -->
+<div id="app-screen" class="hidden">
+<div id="app-layout">
+
+  <!-- Sites Sidebar -->
+  <div id="sites-sidebar">
+    <h3>등록된 사이트</h3>
+    <div id="sidebar-sites-list"><div class="sidebar-empty">없음</div></div>
+    <button class="btn-primary" id="btn-sidebar-add" style="width:100%;margin-top:0.75rem;font-size:0.8rem;padding:0.5rem;">+ 사이트 추가</button>
+  </div>
+
+  <!-- Main content -->
+  <div id="main-content">
+  <!-- Status bar -->
+  <div id="status-bar">
+    <span id="status-text">준비</span>
+    <span id="notice-count">0개 공지</span>
+  </div>
+
+  <!-- Site chips -->
+  <div id="site-chips-bar">
+    <div id="site-chips-container"></div>
+  </div>
+
+  <!-- Category tabs -->
+  <div id="category-tabs-bar">
+    <div id="category-tabs-container"></div>
+  </div>
+
+  <!-- Notices -->
+  <div id="notices-container">
+    <div id="notices-grid">
+      <!-- Empty state -->
+      <div id="empty-state">
+        <span class="empty-icon">📭</span>
+        <div>공지가 없습니다.</div>
+        <div style="margin-top:0.5rem;font-size:0.82rem;">새로고침을 눌러 공지를 수집해보세요.</div>
+      </div>
+
+      <!-- Loading state -->
+      <div id="loading-state" class="hidden">
+        <div class="spinner"></div>
+        <div>공지를 수집하고 있습니다...</div>
+      </div>
+    </div>
+  </div>
+  </div><!-- /main-content -->
+</div><!-- /app-layout -->
+</div><!-- /app-screen -->
+
+<!-- ── Settings Modal ──────────────────────────────────────────────────────── -->
+<div id="settings-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">설정</div>
+      <button class="btn-close" id="btn-close-settings">×</button>
+    </div>
+
+    <!-- Site list -->
+    <div class="modal-section">
+      <div class="modal-section-label">등록된 사이트</div>
+      <div id="settings-sites-list"></div>
+    </div>
+
+    <!-- Add site -->
+    <div class="modal-section">
+      <div class="modal-section-label">사이트 추가</div>
+      <div style="margin-bottom:0.5rem;">
+        <input type="url" id="settings-url" placeholder="https://...">
+      </div>
+      <div class="input-row">
+        <input type="text" id="settings-name" placeholder="사이트 이름">
+        <button class="btn-primary" id="btn-add-settings-site">추가</button>
+      </div>
+    </div>
+
+    <!-- Data management -->
+    <div class="modal-section">
+      <div class="modal-section-label">데이터 관리</div>
+      <button class="btn-danger" id="btn-clear-notices">🗑️ 공지 전체 삭제</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Notice Detail Modal ─────────────────────────────────────────────────── -->
+<div id="notice-detail-modal" class="modal-overlay hidden">
+  <div class="modal-box detail-modal-box">
+    <div class="modal-header">
+      <div id="detail-category"></div>
+      <button class="btn-close" id="btn-close-detail">×</button>
+    </div>
+    <div id="detail-title"></div>
+    <div id="detail-meta"></div>
+    <div id="detail-summary"></div>
+    <div class="detail-actions">
+      <button class="btn-action btn-action-primary" id="btn-detail-calendar">📅 Google Calendar에 등록</button>
+      <button class="btn-action btn-action-secondary hidden" id="btn-detail-link">🔗 원문 보기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Scripts ─────────────────────────────────────────────────────────────── -->
+<script src="js/store.js"></script>
+<script src="js/fetchAgent.js"></script>
+<script src="js/extractAgent.js"></script>
+<script src="js/calendarAgent.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
