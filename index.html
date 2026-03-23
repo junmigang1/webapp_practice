@@ -453,20 +453,10 @@
 <div id="setup-screen">
   <div class="setup-icon">🤖</div>
   <div class="setup-title">시작하기</div>
-  <p class="setup-sub">OpenRouter API 키를 입력하고 첫 번째 사이트를 등록해보세요</p>
+  <p class="setup-sub">공지를 가져올 사이트를 등록해보세요</p>
 
-  <!-- Step 1: API Key -->
-  <div class="setup-card">
-    <div class="setup-card-title">Step 1 · OpenRouter API 키</div>
-    <div class="input-row">
-      <input type="text" id="setup-apikey" placeholder="sk-or-..." data-placeholder="sk-or-...">
-      <button class="btn-primary" id="btn-save-apikey">저장</button>
-    </div>
-  </div>
-
-  <!-- Step 2: Add Site (hidden until API key saved) -->
-  <div class="setup-card hidden" id="setup-site-step">
-    <div class="setup-card-title">Step 2 · 사이트 등록</div>
+  <div class="setup-card" id="setup-site-step">
+    <div class="setup-card-title">사이트 등록</div>
     <div class="setup-row">
       <input type="url" id="setup-url" placeholder="https://example.com/notice" data-placeholder="https://example.com/notice">
     </div>

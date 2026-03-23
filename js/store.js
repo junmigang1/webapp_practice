@@ -1,7 +1,6 @@
 const NoticeStore = (() => {
   const SITES_KEY = 'nid_sites';
   const NOTICES_KEY = 'nid_notices';
-  const APIKEY_KEY = 'nid_apikey';
 
   function load(key) {
     try {
@@ -15,9 +14,6 @@ const NoticeStore = (() => {
   function save(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
   }
-
-  function getApiKey() { return localStorage.getItem(APIKEY_KEY) || ''; }
-  function setApiKey(key) { localStorage.setItem(APIKEY_KEY, key); }
 
   function getSites() { return load(SITES_KEY) || []; }
 
@@ -86,7 +82,6 @@ const NoticeStore = (() => {
   function clearNotices() { save(NOTICES_KEY, []); }
 
   return {
-    getApiKey, setApiKey,
     getSites, addSite, removeSite, updateSiteChecked,
     getNotices, addNotices, markSeen, clearNotices
   };

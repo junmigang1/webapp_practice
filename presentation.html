@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>공지 통합 대시보드 — 서비스 기획 발표</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --primary: #4F46E5;
+    --primary-light: #818CF8;
+    --accent: #06B6D4;
+    --accent2: #10B981;
+    --warn: #F59E0B;
+    --danger: #EF4444;
+    --bg: #0F0F1A;
+    --bg2: #1A1A2E;
+    --card: #1E1E3A;
+    --card2: #252545;
+    --border: #2D2D5E;
+    --text: #E2E8F0;
+    --text2: #94A3B8;
+    --text3: #64748B;
+  }
+
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Pretendard', 'Apple SD Gothic Neo', -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    background: rgba(15,15,26,0.92); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border); z-index: 100;
+    padding: 0 2rem; height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-logo { font-weight: 700; font-size: 1rem; color: var(--primary-light); }
+  .nav-links { display: flex; gap: 0.25rem; }
+  .nav-links a { color: var(--text2); text-decoration: none; font-size: 0.78rem; padding: 0.35rem 0.75rem; border-radius: 6px; transition: all 0.2s; }
+  .nav-links a:hover { background: var(--card); color: var(--text); }
+
+  section { min-height: 100vh; padding: 120px 2rem 80px; max-width: 1100px; margin: 0 auto; }
+
+  .hero {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; min-height: 100vh; padding: 0 2rem;
+    background: radial-gradient(ellipse 80% 60% at 50% 30%, rgba(79,70,229,0.18) 0%, transparent 70%);
+  }
+  .hero-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(79,70,229,0.15); border: 1px solid rgba(79,70,229,0.4); color: var(--primary-light); padding: 0.4rem 1rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; margin-bottom: 2rem; }
+  .hero h1 { font-size: clamp(2.2rem, 5vw, 3.8rem); font-weight: 800; letter-spacing: -1.5px; line-height: 1.15; margin-bottom: 1.5rem; }
+  .hero h1 span { color: var(--primary-light); }
+  .hero .sub { font-size: clamp(1rem, 2vw, 1.25rem); color: var(--text2); max-width: 620px; margin-bottom: 3rem; }
+  .hero-slogan { font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 700; background: linear-gradient(135deg, var(--primary-light), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .scroll-hint { margin-top: 4rem; color: var(--text3); font-size: 0.8rem; animation: bounce 2s infinite; }
+  @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(6px)} }
+
+  .sec-header { margin-bottom: 3rem; }
+  .sec-num { font-size: 0.75rem; font-weight: 700; letter-spacing: 2px; color: var(--primary-light); text-transform: uppercase; margin-bottom: 0.5rem; }
+  .sec-title { font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 800; letter-spacing: -1px; line-height: 1.2; }
+  .sec-title span { color: var(--primary-light); }
+  .sec-desc { color: var(--text2); margin-top: 0.75rem; font-size: 1rem; max-width: 640px; }
+
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; }
+  .card:hover { border-color: rgba(79,70,229,0.5); transition: border-color 0.2s; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+
+  .tag { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.72rem; font-weight: 600; }
+  .tag-blue { background: rgba(79,70,229,0.15); color: var(--primary-light); }
+  .tag-cyan { background: rgba(6,182,212,0.15); color: var(--accent); }
+  .tag-green { background: rgba(16,185,129,0.15); color: var(--accent2); }
+  .tag-yellow { background: rgba(245,158,11,0.15); color: var(--warn); }
+  .tag-red { background: rgba(239,68,68,0.15); color: var(--danger); }
+  .tag-gray { background: rgba(100,116,139,0.15); color: var(--text3); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  th { text-align: left; padding: 0.75rem 1rem; color: var(--text2); font-weight: 600; font-size: 0.78rem; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); text-transform: uppercase; }
+  td { padding: 0.75rem 1rem; border-bottom: 1px solid rgba(45,45,94,0.5); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(79,70,229,0.04); }
+  .check { color: var(--accent2); font-weight: 700; }
+  .cross { color: var(--text3); }
+  .half { color: var(--warn); }
+
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; text-align: center; }
+  .stat-num { font-size: 2rem; font-weight: 800; letter-spacing: -1px; background: linear-gradient(135deg, var(--primary-light), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .stat-label { color: var(--text2); font-size: 0.82rem; margin-top: 0.25rem; }
+  .stat-sub { color: var(--text3); font-size: 0.75rem; margin-top: 0.1rem; }
+
+  /* FLOW DIAGRAM */
+  .flow-wrapper { display: flex; align-items: center; gap: 0; overflow-x: auto; padding-bottom: 0.5rem; }
+  .flow-node {
+    flex-shrink: 0; width: 150px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 1.25rem 1rem; text-align: center;
+    position: relative; transition: all 0.2s;
+  }
+  .flow-node:hover { border-color: rgba(79,70,229,0.6); transform: translateY(-2px); }
+  .flow-node.user-node {
+    background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(6,182,212,0.08));
+    border-color: rgba(16,185,129,0.5);
+  }
+  .flow-node-num { font-size: 0.65rem; font-weight: 700; letter-spacing: 1px; color: var(--text3); text-transform: uppercase; margin-bottom: 0.5rem; }
+  .flow-node-icon { font-size: 2rem; margin-bottom: 0.6rem; display: block; }
+  .flow-node-title { font-weight: 700; font-size: 0.92rem; margin-bottom: 0.3rem; }
+  .flow-node-sub { color: var(--text2); font-size: 0.73rem; line-height: 1.4; margin-bottom: 0.5rem; }
+  .flow-arrow-wrap { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 0.2rem; padding: 0 0.25rem; }
+  .flow-arrow-line { width: 36px; height: 2px; background: linear-gradient(90deg, var(--border), var(--primary-light)); }
+  .flow-arrow-head { width: 0; height: 0; border-top: 6px solid transparent; border-bottom: 6px solid transparent; border-left: 10px solid var(--primary-light); }
+  .flow-arrow-label { font-size: 0.62rem; color: var(--text3); white-space: nowrap; }
+
+  /* AGENT CARDS */
+  .agent-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 1rem; }
+  .agent-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem; position: relative; overflow: hidden; }
+  .agent-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--primary), var(--accent)); }
+  .agent-num { font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; color: var(--text3); text-transform: uppercase; margin-bottom: 0.5rem; }
+  .agent-icon { font-size: 1.6rem; margin-bottom: 0.5rem; }
+  .agent-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--primary-light); }
+  .agent-desc { color: var(--text2); font-size: 0.78rem; line-height: 1.5; }
+  .agent-tech { margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border); font-size: 0.7rem; color: var(--accent); font-weight: 600; }
+
+  /* MOSCOW */
+  .moscow-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .moscow-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem; }
+  .moscow-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 0.75rem; }
+  .moscow-item { display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.4rem 0; border-bottom: 1px solid rgba(45,45,94,0.4); font-size: 0.83rem; }
+  .moscow-item:last-child { border-bottom: none; }
+  .moscow-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
+
+  .highlight { background: linear-gradient(135deg, rgba(79,70,229,0.12), rgba(6,182,212,0.08)); border: 1px solid rgba(79,70,229,0.3); border-radius: 16px; padding: 2rem; text-align: center; }
+  .highlight .big { font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 800; background: linear-gradient(135deg, var(--primary-light), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+  .divider { height: 1px; background: var(--border); margin: 3rem 0; }
+
+  .risk-row { display: flex; gap: 1rem; align-items: flex-start; padding: 1rem; border-radius: 10px; background: var(--card2); margin-bottom: 0.75rem; }
+  .risk-icon { font-size: 1.2rem; flex-shrink: 0; }
+  .risk-title { font-weight: 600; font-size: 0.88rem; margin-bottom: 0.25rem; }
+  .risk-sol { color: var(--accent2); font-size: 0.8rem; }
+
+  .roadmap { display: flex; gap: 1rem; }
+  .phase { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem; }
+  .phase-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); margin-bottom: 0.5rem; }
+  .phase-title { font-weight: 700; margin-bottom: 0.75rem; }
+  .phase-item { display: flex; gap: 0.5rem; align-items: flex-start; font-size: 0.8rem; color: var(--text2); margin-bottom: 0.4rem; }
+  .phase-item::before { content: '→'; color: var(--primary-light); flex-shrink: 0; }
+
+  /* COMPETITOR CARDS */
+  .comp-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; position: relative; overflow: hidden; }
+  .comp-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .comp-feedly::before { background: #6DBD4B; }
+  .comp-inoreader::before { background: #4A9EE8; }
+  .comp-alerts::before { background: #EA4335; }
+  .comp-name { font-size: 1.05rem; font-weight: 800; margin-bottom: 0.25rem; }
+  .comp-type { font-size: 0.75rem; color: var(--text3); margin-bottom: 1rem; }
+  .comp-section-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 0.4rem; }
+  .comp-row { display: flex; align-items: flex-start; gap: 0.4rem; font-size: 0.8rem; color: var(--text2); margin-bottom: 0.3rem; }
+  .comp-row::before { content: '•'; color: var(--text3); flex-shrink: 0; }
+  .comp-divider { height: 1px; background: var(--border); margin: 0.75rem 0; }
+  .comp-limit { font-size: 0.8rem; color: var(--danger); display: flex; align-items: flex-start; gap: 0.4rem; margin-bottom: 0.3rem; }
+  .comp-limit::before { content: '✗'; font-weight: 700; flex-shrink: 0; }
+
+  footer { background: var(--bg2); border-top: 1px solid var(--border); padding: 3rem 2rem; text-align: center; color: var(--text3); font-size: 0.85rem; }
+  footer strong { color: var(--text2); }
+
+  @media(max-width:768px) {
+    .grid2,.grid3,.moscow-grid,.agent-grid,.roadmap { grid-template-columns: 1fr; flex-direction: column; }
+    nav { display: none; }
+    .flow-wrapper { flex-direction: column; }
+    .flow-arrow-wrap { transform: rotate(90deg); }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">📋 아이디어 기획</div>
+  <div class="nav-links">
+    <a href="#problem">문제 정의</a>
+    <a href="#market">시장 분석</a>
+    <a href="#competitor">경쟁사</a>
+    <a href="#solution">솔루션</a>
+    <a href="#agent">AI Agent</a>
+    <a href="#roadmap">로드맵</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero" id="home">
+  <div class="hero-badge">🚀 AI Agent 기반 서비스 기획</div>
+  <h1>흩어진 공지를<br><span>하나로 모아주는</span><br>AI 비서</h1>
+  <p class="sub">여러 사이트의 공지를 자동 수집·분류·요약하고<br>마감일을 캘린더에 바로 등록해드립니다</p>
+  <div class="hero-slogan">"10개 사이트를 돌아다니던 30분을, 30초로"</div>
+  <div class="scroll-hint">▼ 스크롤하여 내용 보기</div>
+</div>
+
+<!-- 01 문제 정의 -->
+<section id="problem">
+  <div class="sec-header">
+    <div class="sec-num">01 / Problem</div>
+    <div class="sec-title">왜 이 서비스가 <span>필요한가</span></div>
+    <div class="sec-desc">대학생·취준생이 매일 겪는 정보 관리의 비효율</div>
+  </div>
+
+  <div class="grid3" style="margin-bottom:1.25rem;">
+    <div class="stat-card">
+      <div class="stat-num">10~25개</div>
+      <div class="stat-label">1인당 확인해야 할 사이트 수</div>
+      <div class="stat-sub">학교 포털·학과·창업지원단·정부기관·기업 등</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">주 2~4시간</div>
+      <div class="stat-label">공지 수동 확인에 낭비되는 시간</div>
+      <div class="stat-sub">연간 최저시급 기준 100~200만 원 상당</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">수십~수백만 원</div>
+      <div class="stat-label">공지 누락 시 기회 손실</div>
+      <div class="stat-sub">장학금·공모전·채용 마감 놓침</div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div style="font-weight:700;margin-bottom:1rem;">🎯 핵심 타겟 사용자</div>
+      <div style="margin-bottom:0.75rem;">
+        <span class="tag tag-blue">1순위</span>
+        <strong style="margin-left:0.5rem;">재학 대학생 (20~27세)</strong>
+        <div style="color:var(--text2);font-size:0.83rem;margin-top:0.25rem;padding-left:0.5rem;">학교 공지, 장학금, 창업지원, 교내 행사 등 다중 채널 동시 관리 필요</div>
+      </div>
+      <div>
+        <span class="tag tag-cyan">2순위</span>
+        <strong style="margin-left:0.5rem;">취업준비생 (23~30세)</strong>
+        <div style="color:var(--text2);font-size:0.83rem;margin-top:0.25rem;padding-left:0.5rem;">채용공고·공모전·정부지원사업·인턴십까지 외부 사이트 확인 범위 확장</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:700;margin-bottom:1rem;">😤 현재 사용자들의 대응 방식과 한계</div>
+      <table>
+        <tr><th>대응 방식</th><th>핵심 한계</th></tr>
+        <tr><td>북마크 수동 순회</td><td style="color:var(--danger);font-size:0.82rem;">시간 낭비 + 누락 빈번</td></tr>
+        <tr><td>카카오톡 채널 구독</td><td style="color:var(--danger);font-size:0.82rem;">정보 휘발, 분류 불가</td></tr>
+        <tr><td>RSS 리더 (Feedly)</td><td style="color:var(--danger);font-size:0.82rem;">RSS 미지원 사이트 많음</td></tr>
+        <tr><td>Google Alerts</td><td style="color:var(--danger);font-size:0.82rem;">키워드 기반, 노이즈 폭주</td></tr>
+        <tr><td>Notion 수동 DB</td><td style="color:var(--danger);font-size:0.82rem;">자동화 없이 수동 업데이트</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="highlight">
+    <div style="color:var(--text2);font-size:0.85rem;margin-bottom:0.75rem;">핵심 문제 정의</div>
+    <div class="big">"분산된 수십 개 사이트의 공지를 수동 순회 확인하느라<br>주당 수 시간을 낭비하고, 마감일을 놓쳐<br>장학금·취업·창업 기회를 상실한다"</div>
+    <div style="color:var(--text2);font-size:0.85rem;margin-top:0.75rem;">공지 수집·분류·일정화를 통합하는 도구가 존재하지 않기 때문</div>
+  </div>
+</section>
+
+<!-- 02 시장 분석 -->
+<section id="market">
+  <div class="sec-header">
+    <div class="sec-num">02 / Market</div>
+    <div class="sec-title">시장 <span>규모와 기회</span></div>
+    <div class="sec-desc">국내 대학생·취준생 중심의 정보 큐레이션 시장</div>
+  </div>
+
+  <div class="grid3" style="margin-bottom:2rem;">
+    <div class="card" style="border-color:rgba(79,70,229,0.4);">
+      <div class="tag tag-blue" style="margin-bottom:0.75rem;">TAM</div>
+      <div style="font-size:1.8rem;font-weight:800;color:var(--primary-light);">~1,500억 원</div>
+      <div style="color:var(--text2);font-size:0.83rem;margin-top:0.5rem;">국내 대학생+취준생 약 270~300만 명<br>정보 구독 서비스 전체 시장</div>
+    </div>
+    <div class="card" style="border-color:rgba(6,182,212,0.4);">
+      <div class="tag tag-cyan" style="margin-bottom:0.75rem;">SAM</div>
+      <div style="font-size:1.8rem;font-weight:800;color:var(--accent);">~100억 원</div>
+      <div style="color:var(--text2);font-size:0.83rem;margin-top:0.5rem;">적극적 정보 탐색자 80~120만 명<br>실질 서비스 가능 시장</div>
+    </div>
+    <div class="card" style="border-color:rgba(16,185,129,0.4);">
+      <div class="tag tag-green" style="margin-bottom:0.75rem;">SOM (1~2년)</div>
+      <div style="font-size:1.8rem;font-weight:800;color:var(--accent2);">~5억 원</div>
+      <div style="color:var(--text2);font-size:0.83rem;margin-top:0.5rem;">초기 MAU 1만~5만 명<br>수도권 대학 집중 공략</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="font-weight:700;margin-bottom:1.25rem;">📈 왜 지금이 적기인가</div>
+    <div style="display:flex;flex-direction:column;gap:0.75rem;">
+      <div style="display:flex;gap:0.75rem;align-items:flex-start;padding:0.75rem;background:var(--card2);border-radius:10px;">
+        <span style="font-size:1.4rem;flex-shrink:0;">🤖</span>
+        <div><strong>LLM 기술 민주화</strong><br><span style="color:var(--text2);font-size:0.82rem;">Claude Code 등 AI 도구 접근성이 높아져 개인 개발자도 고품질 AI 서비스 구현 가능</span></div>
+      </div>
+      <div style="display:flex;gap:0.75rem;align-items:flex-start;padding:0.75rem;background:var(--card2);border-radius:10px;">
+        <span style="font-size:1.4rem;flex-shrink:0;">🏆</span>
+        <div><strong>경쟁 서비스 전무</strong><br><span style="color:var(--text2);font-size:0.82rem;">국내 공지 통합 AI 서비스 사실상 없음 — 선점 기회의 창이 열려 있음</span></div>
+      </div>
+      <div style="display:flex;gap:0.75rem;align-items:flex-start;padding:0.75rem;background:var(--card2);border-radius:10px;">
+        <span style="font-size:1.4rem;flex-shrink:0;">📅</span>
+        <div><strong>캘린더 연동 수요 증가</strong><br><span style="color:var(--text2);font-size:0.82rem;">구글 캘린더 사용률 증가 — 일정 자동 등록 기능에 대한 실질 수요 높아짐</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 경쟁사 분석 -->
+<section id="competitor">
+  <div class="sec-header">
+    <div class="sec-num">03 / Competitor</div>
+    <div class="sec-title">경쟁사 분석과 <span>차별화</span></div>
+    <div class="sec-desc">기존 서비스가 해결하지 못하는 영역을 정확히 공략</div>
+  </div>
+
+  <!-- 경쟁사 상세 카드 -->
+  <div class="grid3" style="margin-bottom:1.5rem;">
+
+    <div class="comp-card comp-feedly">
+      <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.25rem;">
+        <span style="font-size:1.4rem;">📰</span>
+        <div class="comp-name">Feedly</div>
+      </div>
+      <div class="comp-type">RSS 리더 / 글로벌 서비스</div>
+
+      <div class="comp-section-label" style="color:var(--accent2);">주요 기능</div>
+      <div class="comp-row">RSS/Atom 피드 구독 및 통합 뷰</div>
+      <div class="comp-row">Leo AI로 뉴스 요약·우선순위 정렬</div>
+      <div class="comp-row">팀 공유 및 협업 기능</div>
+      <div class="comp-row">Slack·Notion 등 외부 연동</div>
+
+      <div class="comp-divider"></div>
+      <div class="comp-section-label" style="color:var(--danger);">핵심 한계</div>
+      <div class="comp-limit">RSS 피드 없는 사이트 지원 불가 — 국내 대학·정부기관 상당수가 RSS 미제공</div>
+      <div class="comp-limit">한국어 AI 요약·분류 최적화 없음</div>
+      <div class="comp-limit">마감일 자동 추출, 캘린더 연동 없음</div>
+
+      <div class="comp-divider"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span class="tag tag-gray">무료: 100개 소스 제한</span>
+        <span style="font-size:0.78rem;color:var(--text2);">Pro $8~10/월~</span>
+      </div>
+    </div>
+
+    <div class="comp-card comp-inoreader">
+      <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.25rem;">
+        <span style="font-size:1.4rem;">📡</span>
+        <div class="comp-name">Inoreader Pro</div>
+      </div>
+      <div class="comp-type">RSS 리더 + 웹 모니터링 / 글로벌 서비스</div>
+
+      <div class="comp-section-label" style="color:var(--accent2);">주요 기능</div>
+      <div class="comp-row">RSS 구독 + 웹페이지 변경 감지 (Pro)</div>
+      <div class="comp-row">자동화 규칙으로 특정 키워드 필터링</div>
+      <div class="comp-row">태깅, 폴더, 스크래핑 규칙 설정</div>
+      <div class="comp-row">경쟁사 중 가장 강력한 커스터마이징</div>
+
+      <div class="comp-divider"></div>
+      <div class="comp-section-label" style="color:var(--danger);">핵심 한계</div>
+      <div class="comp-limit">웹 모니터링은 Pro 이상 유료 기능 ($9.99/월)</div>
+      <div class="comp-limit">AI 자동 요약·분류 기능 없음</div>
+      <div class="comp-limit">한국어 공지문 파싱 최적화 전무</div>
+      <div class="comp-limit">마감일 추출, 캘린더 연동 없음</div>
+
+      <div class="comp-divider"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span class="tag tag-gray">무료 플랜 기능 제한</span>
+        <span style="font-size:0.78rem;color:var(--text2);">Pro $9.99/월~</span>
+      </div>
+    </div>
+
+    <div class="comp-card comp-alerts">
+      <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.25rem;">
+        <span style="font-size:1.4rem;">🔔</span>
+        <div class="comp-name">Google Alerts</div>
+      </div>
+      <div class="comp-type">키워드 기반 웹 모니터링 / Google 서비스</div>
+
+      <div class="comp-section-label" style="color:var(--accent2);">주요 기능</div>
+      <div class="comp-row">특정 키워드 웹 언급 시 이메일 알림</div>
+      <div class="comp-row">알림 빈도·지역·언어 필터 설정 가능</div>
+      <div class="comp-row">완전 무료, 별도 설치 불필요</div>
+      <div class="comp-row">Google 검색 인덱스 기반 폭넓은 웹 커버리지</div>
+
+      <div class="comp-divider"></div>
+      <div class="comp-section-label" style="color:var(--danger);">핵심 한계</div>
+      <div class="comp-limit">특정 URL(사이트) 지정 모니터링 불가 — 키워드만 추적</div>
+      <div class="comp-limit">관련 없는 결과 노이즈가 매우 많음</div>
+      <div class="comp-limit">이메일로만 수신, 통합 대시보드 없음</div>
+      <div class="comp-limit">분류, 요약, 마감일 추출, 캘린더 연동 전무</div>
+
+      <div class="comp-divider"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span class="tag tag-green">완전 무료</span>
+        <span style="font-size:0.78rem;color:var(--text2);">Google 계정 필요</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 비교 매트릭스 -->
+  <div class="card" style="margin-bottom:1.5rem;overflow-x:auto;">
+    <div style="font-weight:700;margin-bottom:1rem;">📊 기능 비교 매트릭스</div>
+    <table>
+      <thead>
+        <tr>
+          <th>기능</th>
+          <th style="color:var(--primary-light);">본 서비스</th>
+          <th>Feedly</th>
+          <th>Inoreader Pro</th>
+          <th>Google Alerts</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>임의 URL 직접 등록</td><td class="check">✓</td><td class="half">△ RSS만</td><td class="half">△ 유료</td><td class="cross">✗ 키워드만</td></tr>
+        <tr><td>RSS 없는 사이트 지원</td><td class="check">✓</td><td class="cross">✗</td><td class="half">△ 유료</td><td class="cross">✗</td></tr>
+        <tr><td>AI 자동 파싱·요약</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+        <tr><td>한국어 특화 AI 분류</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+        <tr><td>마감일 자동 추출</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+        <tr><td>캘린더 원클릭 등록</td><td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+        <tr><td>통합 대시보드</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="cross">✗ 이메일만</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 차별화 & Moat -->
+  <div class="grid2">
+    <div class="card">
+      <div style="font-weight:700;margin-bottom:1rem;">🔑 핵심 차별화 포인트</div>
+      <div style="display:flex;flex-direction:column;gap:0.75rem;">
+        <div style="padding:0.75rem;background:var(--card2);border-radius:10px;">
+          <div style="font-weight:600;color:var(--primary-light);margin-bottom:0.25rem;">RSS 없어도 된다</div>
+          <div style="color:var(--text2);font-size:0.82rem;">국내 대학·정부 사이트 상당수 RSS 미지원 → LLM으로 HTML 직접 파싱</div>
+        </div>
+        <div style="padding:0.75rem;background:var(--card2);border-radius:10px;">
+          <div style="font-weight:600;color:var(--accent);margin-bottom:0.25rem;">분류를 사용자가 안 해도 된다</div>
+          <div style="color:var(--text2);font-size:0.82rem;">AI가 공지 내용을 읽고 창업/취업/장학금 등 자동 분류</div>
+        </div>
+        <div style="padding:0.75rem;background:var(--card2);border-radius:10px;">
+          <div style="font-weight:600;color:var(--accent2);margin-bottom:0.25rem;">마감일을 찾지 않아도 된다</div>
+          <div style="color:var(--text2);font-size:0.82rem;">공지문에서 날짜를 자동 추출 → 캘린더 등록까지 1클릭</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:700;margin-bottom:1rem;">🏰 지속 가능한 경쟁 우위 (Moat)</div>
+      <div style="display:flex;flex-direction:column;gap:0.6rem;">
+        <div style="display:flex;gap:0.6rem;align-items:flex-start;padding:0.4rem 0;border-bottom:1px solid var(--border);">
+          <span>🔗</span><div><strong style="font-size:0.85rem;">데이터 네트워크 효과</strong><br><span style="color:var(--text2);font-size:0.78rem;">누적 URL DB → 인기 소스 추천 → 사용자 증가 → DB 풍부화</span></div>
+        </div>
+        <div style="display:flex;gap:0.6rem;align-items:flex-start;padding:0.4rem 0;border-bottom:1px solid var(--border);">
+          <span>📚</span><div><strong style="font-size:0.85rem;">파싱 정확도 누적 학습</strong><br><span style="color:var(--text2);font-size:0.78rem;">사용자 피드백으로 프롬프트 개선 → 시간이 지날수록 품질 향상</span></div>
+        </div>
+        <div style="display:flex;gap:0.6rem;align-items:flex-start;padding:0.4rem 0;border-bottom:1px solid var(--border);">
+          <span>🔒</span><div><strong style="font-size:0.85rem;">높은 전환 비용</strong><br><span style="color:var(--text2);font-size:0.78rem;">URL·분류 설정 완료 시 다른 서비스로 이전 비용 높음</span></div>
+        </div>
+        <div style="display:flex;gap:0.6rem;align-items:flex-start;padding:0.4rem 0;">
+          <span>🇰🇷</span><div><strong style="font-size:0.85rem;">한국 공지 도메인 특화</strong><br><span style="color:var(--text2);font-size:0.78rem;">국내 공지문 표현 최적화 — 글로벌 서비스가 빠르게 복제 어려움</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 Solution -->
+<section id="solution">
+  <div class="sec-header">
+    <div class="sec-num">04 / Solution</div>
+    <div class="sec-title">우리의 <span>솔루션</span></div>
+    <div class="sec-desc">흩어진 공지를 한 곳에서 — AI가 읽고, 분류하고, 캘린더에 넣어준다</div>
+  </div>
+
+  <!-- 한 줄 선언 -->
+  <div class="card" style="border-color:rgba(79,70,229,0.5);margin-bottom:1.5rem;text-align:center;padding:2rem 1.5rem;">
+    <div style="font-size:1.05rem;color:var(--text2);margin-bottom:0.5rem;">Product Statement</div>
+    <div style="font-size:1.35rem;font-weight:800;line-height:1.5;">
+      관심 사이트의 URL만 등록하면,<br>
+      AI가 공지를 자동 수집·요약·분류하고<br>
+      <span style="color:var(--primary-light);">마감일을 캘린더에 바로 넣어주는 서비스</span>
+    </div>
+  </div>
+
+  <!-- 핵심 UX 플로우 -->
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div style="font-weight:700;margin-bottom:1.25rem;">👣 사용자 핵심 플로우</div>
+    <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;justify-content:center;">
+
+      <div style="text-align:center;background:var(--card2);border-radius:12px;padding:1rem 1.25rem;min-width:130px;">
+        <div style="font-size:1.6rem;margin-bottom:0.4rem;">🔗</div>
+        <div style="font-weight:700;font-size:0.9rem;">URL 등록</div>
+        <div style="color:var(--text2);font-size:0.75rem;margin-top:0.25rem;">대학 공지, 정부 사이트<br>임의 URL 입력</div>
+      </div>
+
+      <div style="color:var(--text2);font-size:1.2rem;flex-shrink:0;">→</div>
+
+      <div style="text-align:center;background:var(--card2);border-radius:12px;padding:1rem 1.25rem;min-width:130px;">
+        <div style="font-size:1.6rem;margin-bottom:0.4rem;">🤖</div>
+        <div style="font-weight:700;font-size:0.9rem;">AI 자동 처리</div>
+        <div style="color:var(--text2);font-size:0.75rem;margin-top:0.25rem;">크롤링 → 요약<br>분류 → 마감일 추출</div>
+      </div>
+
+      <div style="color:var(--text2);font-size:1.2rem;flex-shrink:0;">→</div>
+
+      <div style="text-align:center;background:var(--card2);border-radius:12px;padding:1rem 1.25rem;min-width:130px;">
+        <div style="font-size:1.6rem;margin-bottom:0.4rem;">📋</div>
+        <div style="font-weight:700;font-size:0.9rem;">통합 대시보드</div>
+        <div style="color:var(--text2);font-size:0.75rem;margin-top:0.25rem;">카테고리별 필터<br>요약 카드 확인</div>
+      </div>
+
+      <div style="color:var(--text2);font-size:1.2rem;flex-shrink:0;">→</div>
+
+      <div style="text-align:center;background:var(--card2);border-radius:12px;padding:1rem 1.25rem;min-width:130px;">
+        <div style="font-size:1.6rem;margin-bottom:0.4rem;">📅</div>
+        <div style="font-weight:700;font-size:0.9rem;">캘린더 등록</div>
+        <div style="color:var(--text2);font-size:0.75rem;margin-top:0.25rem;">원클릭으로<br>Google Calendar 저장</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 핵심 가치 3가지 -->
+  <div class="grid3">
+    <div class="card" style="border-color:rgba(79,70,229,0.4);text-align:center;">
+      <div style="font-size:2rem;margin-bottom:0.5rem;">⏱️</div>
+      <div style="font-weight:700;margin-bottom:0.4rem;">시간 절약</div>
+      <div style="color:var(--text2);font-size:0.82rem;">여러 사이트를 직접 돌아다니는<br>반복 작업 완전 제거</div>
+    </div>
+    <div class="card" style="border-color:rgba(6,182,212,0.4);text-align:center;">
+      <div style="font-size:2rem;margin-bottom:0.5rem;">🎯</div>
+      <div style="font-weight:700;margin-bottom:0.4rem;">놓침 방지</div>
+      <div style="color:var(--text2);font-size:0.82rem;">AI가 마감일을 자동 추출해<br>중요 공지를 캘린더에 보존</div>
+    </div>
+    <div class="card" style="border-color:rgba(16,185,129,0.4);text-align:center;">
+      <div style="font-size:2rem;margin-bottom:0.5rem;">🔍</div>
+      <div style="font-weight:700;margin-bottom:0.4rem;">노이즈 제거</div>
+      <div style="color:var(--text2);font-size:0.82rem;">AI 분류로 내게 필요한 공지만<br>카테고리별로 확인</div>
+    </div>
+  </div>
+
+</section>
+
+<!-- 05 AI Agent 구조 -->
+<section id="agent">
+  <div class="sec-header">
+    <div class="sec-num">05 / AI Agent</div>
+    <div class="sec-title">AI Agent <span>구조 설계</span></div>
+    <div class="sec-desc">전체 흐름: URL 입력 → 크롤링 → AI 분석 → UI 출력 → 사용자 선택 → 캘린더 연결</div>
+  </div>
+
+  <!-- FLOW DIAGRAM -->
+  <div style="margin-bottom:2.5rem;">
+    <div class="flow-wrapper">
+
+      <!-- Step 1 -->
+      <div class="flow-node" style="border-color:rgba(79,70,229,0.5);">
+        <div class="flow-node-num">Step 1</div>
+        <span class="flow-node-icon">🌐</span>
+        <div class="flow-node-title">URL 입력</div>
+        <div class="flow-node-sub">모니터링할 사이트 URL 등록</div>
+        <span class="tag tag-blue" style="font-size:0.65rem;">USER</span>
+      </div>
+
+      <div class="flow-arrow-wrap">
+        <div class="flow-arrow-line"></div>
+        <div class="flow-arrow-head"></div>
+        <div class="flow-arrow-label">등록</div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="flow-node" style="border-color:rgba(6,182,212,0.5);">
+        <div class="flow-node-num">Step 2</div>
+        <span class="flow-node-icon">🕷️</span>
+        <div class="flow-node-title">크롤링</div>
+        <div class="flow-node-sub">CORS 프록시로 HTML 수집</div>
+        <span class="tag tag-cyan" style="font-size:0.65rem;">Fetch Agent</span>
+      </div>
+
+      <div class="flow-arrow-wrap">
+        <div class="flow-arrow-line"></div>
+        <div class="flow-arrow-head"></div>
+        <div class="flow-arrow-label">HTML</div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="flow-node" style="border-color:rgba(245,158,11,0.5);">
+        <div class="flow-node-num">Step 3</div>
+        <span class="flow-node-icon">🤖</span>
+        <div class="flow-node-title">AI 분석</div>
+        <div class="flow-node-sub">LLM 파싱·분류·요약·날짜 추출</div>
+        <span class="tag tag-yellow" style="font-size:0.65rem;">Extract Agent</span>
+      </div>
+
+      <div class="flow-arrow-wrap">
+        <div class="flow-arrow-line"></div>
+        <div class="flow-arrow-head"></div>
+        <div class="flow-arrow-label">구조화</div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="flow-node" style="border-color:rgba(16,185,129,0.5);">
+        <div class="flow-node-num">Step 4</div>
+        <span class="flow-node-icon">📋</span>
+        <div class="flow-node-title">UI 출력</div>
+        <div class="flow-node-sub">통합 대시보드에 공지 카드 표시</div>
+        <span class="tag tag-green" style="font-size:0.65rem;">Dashboard</span>
+      </div>
+
+      <div class="flow-arrow-wrap">
+        <div class="flow-arrow-line"></div>
+        <div class="flow-arrow-head"></div>
+        <div class="flow-arrow-label">확인</div>
+      </div>
+
+      <!-- Step 5 USER -->
+      <div class="flow-node user-node">
+        <div class="flow-node-num" style="color:var(--accent2);">Step 5</div>
+        <span class="flow-node-icon">👆</span>
+        <div class="flow-node-title">일정 선택</div>
+        <div class="flow-node-sub">원하는 공지 직접 선택</div>
+        <span class="tag tag-green" style="font-size:0.65rem;">USER 결정</span>
+      </div>
+
+      <div class="flow-arrow-wrap">
+        <div class="flow-arrow-line" style="background:linear-gradient(90deg, rgba(16,185,129,0.5), var(--danger));"></div>
+        <div class="flow-arrow-head" style="border-left-color:var(--danger);"></div>
+        <div class="flow-arrow-label">등록 요청</div>
+      </div>
+
+      <!-- Step 6 -->
+      <div class="flow-node" style="border-color:rgba(239,68,68,0.5);">
+        <div class="flow-node-num">Step 6</div>
+        <span class="flow-node-icon">📅</span>
+        <div class="flow-node-title">캘린더 연결</div>
+        <div class="flow-node-sub">Google Calendar 자동 등록</div>
+        <span class="tag tag-red" style="font-size:0.65rem;">Calendar Agent</span>
+      </div>
+
+    </div>
+
+    <div style="margin-top:1rem;padding:0.75rem 1rem;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:10px;font-size:0.82rem;color:var(--text2);">
+      💡 <strong style="color:var(--accent2);">일정 선택은 사용자의 몫</strong> — AI는 정보를 수집·분석·제시하고, 캘린더에 무엇을 등록할지 결정은 사람이 합니다
+    </div>
+  </div>
+
+  <!-- AGENT CARDS -->
+  <div class="agent-grid">
+    <div class="agent-card">
+      <div class="agent-num">Agent 01</div>
+      <div class="agent-icon">🕷️</div>
+      <div class="agent-name">Fetch Agent</div>
+      <div class="agent-desc">등록된 URL에서 HTML 콘텐츠를 수집. CORS 프록시 폴백 체인으로 안정성 확보</div>
+      <div class="agent-tech">CORS Proxy Chain</div>
+    </div>
+    <div class="agent-card">
+      <div class="agent-num">Agent 02</div>
+      <div class="agent-icon">📝</div>
+      <div class="agent-name">Extract Agent</div>
+      <div class="agent-desc">HTML을 LLM에 전달하여 공지 제목·요약·게시일·원문 링크를 구조화 데이터로 추출</div>
+      <div class="agent-tech">Structured Output</div>
+    </div>
+    <div class="agent-card">
+      <div class="agent-num">Agent 03</div>
+      <div class="agent-icon">🏷️</div>
+      <div class="agent-name">Classify Agent</div>
+      <div class="agent-desc">공지 내용을 분석하여 창업·취업·장학금·교내행사·공모전 등으로 자동 분류</div>
+      <div class="agent-tech">Extract와 통합 1회 호출</div>
+    </div>
+    <div class="agent-card">
+      <div class="agent-num">Agent 04</div>
+      <div class="agent-icon">⏰</div>
+      <div class="agent-name">Deadline Agent</div>
+      <div class="agent-desc">공지문에서 마감일·행사일 등 날짜 정보를 자동 추출하여 YYYY-MM-DD 형식으로 정규화</div>
+      <div class="agent-tech">Extract와 통합 1회 호출</div>
+    </div>
+    <div class="agent-card" style="border-color:rgba(239,68,68,0.3);">
+      <div class="agent-num">Agent 05</div>
+      <div class="agent-icon">📅</div>
+      <div class="agent-name">Calendar Agent</div>
+      <div class="agent-desc">사용자가 선택한 공지의 일정을 Function Calling으로 Google Calendar 이벤트 생성</div>
+      <div class="agent-tech" style="color:var(--danger);">Function Calling</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- OpenRouter API / Structured Output / Function Calling 상세 -->
+  <div style="margin-bottom:0.75rem;">
+    <div style="font-size:0.75rem;font-weight:700;letter-spacing:2px;color:var(--primary-light);text-transform:uppercase;margin-bottom:0.5rem;">LLM 기술 구현 상세</div>
+    <div style="font-size:clamp(1.2rem,2.5vw,1.8rem);font-weight:800;letter-spacing:-0.5px;">OpenRouter API · Structured Output · Function Calling</div>
+    <div style="color:var(--text2);margin-top:0.5rem;font-size:0.95rem;">각 Agent가 어떤 방식으로 LLM을 호출하는지</div>
+  </div>
+
+  <!-- OpenRouter 호출 흐름 -->
+  <div class="card" style="margin-bottom:1.25rem;">
+    <div style="font-weight:700;margin-bottom:1.25rem;">🔌 OpenRouter API 호출 흐름</div>
+    <div style="display:flex;align-items:center;gap:0;overflow-x:auto;padding-bottom:0.5rem;">
+
+      <div style="flex-shrink:0;text-align:center;padding:1rem;background:var(--card2);border-radius:12px;min-width:130px;">
+        <div style="font-size:1.5rem;margin-bottom:0.4rem;">🌐</div>
+        <div style="font-weight:700;font-size:0.85rem;">브라우저</div>
+        <div style="color:var(--text2);font-size:0.72rem;margin-top:0.25rem;">HTML 수집 완료</div>
+      </div>
+
+      <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:0 0.5rem;">
+        <div style="width:40px;height:2px;background:linear-gradient(90deg,var(--border),var(--primary-light));"></div>
+        <div style="width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:8px solid var(--primary-light);"></div>
+        <div style="font-size:0.65rem;color:var(--text3);margin-top:0.2rem;white-space:nowrap;">API 요청</div>
+      </div>
+
+      <div style="flex-shrink:0;text-align:center;padding:1rem;background:rgba(79,70,229,0.12);border:1px solid rgba(79,70,229,0.4);border-radius:12px;min-width:150px;">
+        <div style="font-size:1.5rem;margin-bottom:0.4rem;">🔀</div>
+        <div style="font-weight:700;font-size:0.85rem;color:var(--primary-light);">OpenRouter API</div>
+        <div style="color:var(--text2);font-size:0.72rem;margin-top:0.25rem;">모델 라우팅 허브</div>
+        <div style="margin-top:0.4rem;font-size:0.65rem;color:var(--text3);">openrouter.ai/api/v1</div>
+      </div>
+
+      <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:0 0.5rem;">
+        <div style="width:40px;height:2px;background:linear-gradient(90deg,var(--border),var(--accent));"></div>
+        <div style="width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:8px solid var(--accent);"></div>
+        <div style="font-size:0.65rem;color:var(--text3);margin-top:0.2rem;white-space:nowrap;">전달</div>
+      </div>
+
+      <div style="flex-shrink:0;text-align:center;padding:1rem;background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.4);border-radius:12px;min-width:130px;">
+        <div style="font-size:1.5rem;margin-bottom:0.4rem;">🤖</div>
+        <div style="font-weight:700;font-size:0.85rem;color:var(--accent);">Claude (LLM)</div>
+        <div style="color:var(--text2);font-size:0.72rem;margin-top:0.25rem;">파싱·분류·추론</div>
+      </div>
+
+      <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:0 0.5rem;">
+        <div style="width:40px;height:2px;background:linear-gradient(90deg,var(--border),var(--accent2));"></div>
+        <div style="width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:8px solid var(--accent2);"></div>
+        <div style="font-size:0.65rem;color:var(--text3);margin-top:0.2rem;white-space:nowrap;">JSON 응답</div>
+      </div>
+
+      <div style="flex-shrink:0;text-align:center;padding:1rem;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.4);border-radius:12px;min-width:130px;">
+        <div style="font-size:1.5rem;margin-bottom:0.4rem;">📋</div>
+        <div style="font-weight:700;font-size:0.85rem;color:var(--accent2);">대시보드</div>
+        <div style="color:var(--text2);font-size:0.72rem;margin-top:0.25rem;">공지 카드 렌더링</div>
+      </div>
+
+    </div>
+    <div style="margin-top:1rem;padding:0.6rem 0.9rem;background:var(--card2);border-radius:8px;font-size:0.78rem;color:var(--text2);">
+      💡 OpenRouter는 단일 API 엔드포인트로 Claude, GPT-4o, Gemini 등 다양한 LLM에 접근할 수 있는 허브. 모델 교체 시 코드 변경 최소화
+    </div>
+  </div>
+
+  <!-- Structured Output vs Function Calling -->
+  <div class="grid2">
+
+    <div class="card" style="border-top:3px solid var(--warn);">
+      <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;">
+        <span style="font-size:1.2rem;">📐</span>
+        <div>
+          <div style="font-weight:700;">Structured Output</div>
+          <div style="font-size:0.75rem;color:var(--text2);">Agent 02·03·04 — Extract·Classify·Deadline</div>
+        </div>
+        <span class="tag tag-yellow" style="margin-left:auto;">1회 통합 호출</span>
+      </div>
+
+      <div style="font-size:0.82rem;color:var(--text2);margin-bottom:1rem;">HTML을 LLM에 전달할 때 <strong style="color:var(--text);">응답 형식을 JSON 스키마로 강제</strong>. LLM이 자유롭게 텍스트를 쓰지 않고 지정된 필드만 채워 반환</div>
+
+      <div style="background:var(--bg);border-radius:10px;padding:0.9rem;font-size:0.75rem;line-height:1.8;">
+        <div style="color:var(--text3);margin-bottom:0.4rem;">// 요청 시 response_format 지정</div>
+        <div><span style="color:var(--accent);">"response_format"</span>: {</div>
+        <div>&nbsp;&nbsp;<span style="color:var(--primary-light);">"type"</span>: <span style="color:var(--accent2);">"json_schema"</span>,</div>
+        <div>&nbsp;&nbsp;<span style="color:var(--primary-light);">"schema"</span>: {</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--warn);">"title"</span>: <span style="color:var(--accent2);">"string"</span>,</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--warn);">"summary"</span>: <span style="color:var(--accent2);">"string"</span>,</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--warn);">"deadline"</span>: <span style="color:var(--accent2);">"YYYY-MM-DD | null"</span>,</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--warn);">"category"</span>: <span style="color:var(--accent2);">"창업|취업|장학금|..."</span></div>
+        <div>&nbsp;&nbsp;}</div>
+        <div>}</div>
+      </div>
+
+      <div style="margin-top:0.75rem;padding:0.6rem;background:rgba(245,158,11,0.08);border-radius:8px;font-size:0.75rem;color:var(--text2);">
+        → LLM이 HTML을 읽고 위 필드를 채운 JSON만 반환<br>→ 파싱·분류·날짜 추출을 <strong style="color:var(--warn);">단 1번의 호출</strong>로 처리
+      </div>
+    </div>
+
+    <div class="card" style="border-top:3px solid var(--danger);">
+      <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;">
+        <span style="font-size:1.2rem;">⚡</span>
+        <div>
+          <div style="font-weight:700;">Function Calling</div>
+          <div style="font-size:0.75rem;color:var(--text2);">Agent 05 — Calendar Agent</div>
+        </div>
+        <span class="tag tag-red" style="margin-left:auto;">사용자 선택 시</span>
+      </div>
+
+      <div style="font-size:0.82rem;color:var(--text2);margin-bottom:1rem;">LLM에게 <strong style="color:var(--text);">사용할 수 있는 함수 목록을 미리 전달</strong>. LLM이 공지 내용을 보고 필요한 함수와 파라미터를 스스로 결정해 호출</div>
+
+      <div style="background:var(--bg);border-radius:10px;padding:0.9rem;font-size:0.75rem;line-height:1.8;">
+        <div style="color:var(--text3);margin-bottom:0.4rem;">// 함수 정의를 tools로 전달</div>
+        <div><span style="color:var(--accent);">"tools"</span>: [{</div>
+        <div>&nbsp;&nbsp;<span style="color:var(--primary-light);">"name"</span>: <span style="color:var(--accent2);">"create_calendar_event"</span>,</div>
+        <div>&nbsp;&nbsp;<span style="color:var(--primary-light);">"parameters"</span>: {</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--warn);">"title"</span>: <span style="color:var(--accent2);">"string"</span>,</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--warn);">"start_date"</span>: <span style="color:var(--accent2);">"YYYY-MM-DD"</span>,</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--warn);">"end_date"</span>: <span style="color:var(--accent2);">"YYYY-MM-DD"</span></div>
+        <div>&nbsp;&nbsp;}</div>
+        <div>}]</div>
+      </div>
+
+      <div style="margin-top:0.75rem;padding:0.6rem;background:rgba(239,68,68,0.08);border-radius:8px;font-size:0.75rem;color:var(--text2);">
+        → LLM이 공지 요약을 읽고 날짜·제목을 추론해 파라미터 자동 완성<br>→ 앱이 반환된 파라미터로 <strong style="color:var(--danger);">Google Calendar API 직접 호출</strong>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- 06 로드맵 -->
+<section id="roadmap">
+  <div class="sec-header">
+    <div class="sec-num">06 / Roadmap</div>
+    <div class="sec-title">개발 <span>로드맵</span></div>
+    <div class="sec-desc">MVP 3일 구현 목표</div>
+  </div>
+
+  <div class="roadmap" style="margin-bottom:2rem;">
+    <div class="phase" style="border-color:rgba(239,68,68,0.4);">
+      <div class="phase-label">Day 1</div>
+      <div class="phase-title" style="color:var(--danger);">데이터 파이프라인</div>
+      <div class="phase-item">URL 등록 UI 구성</div>
+      <div class="phase-item">Fetch Agent (CORS 프록시 폴백)</div>
+      <div class="phase-item">Extract Agent (Structured Output)</div>
+      <div class="phase-item">파싱 결과 콘솔 확인</div>
+    </div>
+    <div class="phase" style="border-color:rgba(245,158,11,0.4);">
+      <div class="phase-label">Day 2</div>
+      <div class="phase-title" style="color:var(--warn);">UI & 분류</div>
+      <div class="phase-item">NoticeStore (LocalStorage)</div>
+      <div class="phase-item">공지 카드 목록 뷰</div>
+      <div class="phase-item">카테고리 필터 탭</div>
+      <div class="phase-item">신규 공지 New 뱃지</div>
+    </div>
+    <div class="phase" style="border-color:rgba(16,185,129,0.4);">
+      <div class="phase-label">Day 3</div>
+      <div class="phase-title" style="color:var(--accent2);">캘린더 연동</div>
+      <div class="phase-item">Calendar Agent (Function Calling)</div>
+      <div class="phase-item">Google OAuth 2.0 연동</div>
+      <div class="phase-item">전체 플로우 통합 테스트</div>
+      <div class="phase-item">GitHub Pages 배포</div>
+    </div>
+  </div>
+
+  <div class="highlight">
+    <div class="big">"10개 사이트를 돌아다니던 30분을, 30초로"</div>
+    <div style="color:var(--text2);font-size:0.9rem;margin-top:1rem;">
+      RSS 없이도 어떤 URL이든 파싱 · AI 자동 분류 · 마감일 추출 · 캘린더 1클릭 등록<br>
+      <strong style="color:var(--primary-light);">기존 서비스 중 이 4가지를 동시에 제공하는 서비스는 없다</strong>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <strong>공지 통합 대시보드 — AI Agent 기반 서비스 기획</strong><br>
+  <span style="margin-top:0.5rem;display:block;">Claude · Structured Output · Function Calling · Web App</span>
+</footer>
+
+</body>
+</html>

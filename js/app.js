@@ -8,38 +8,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const show = el => el && el.classList.remove('hidden');
   const hide = el => el && el.classList.add('hidden');
 
-  // ── Load API key from server (.env) ─────────────────────────────────────────
-  async function loadApiKeyFromServer() {
-    try {
-      const res = await fetch('/api/config');
-      if (!res.ok) return null;
-      const data = await res.json();
-      if (data.apiKey) {
-        NoticeStore.setApiKey(data.apiKey);
-        return data.apiKey;
-      }
-    } catch (e) {
-      // 서버에서 못 불러오면 UI 입력으로 fallback
-    }
-    return null;
-  }
-
   // ── Init ────────────────────────────────────────────────────────────────────
   async function init() {
-    // .env에서 API 키 우선 로드
-    await loadApiKeyFromServer();
-
-    const apiKey = NoticeStore.getApiKey();
     const sites = NoticeStore.getSites();
 
-    if (!apiKey) {
+    if (sites.length === 0) {
       show($('setup-screen'));
       hide($('app-screen'));
-      hide($('setup-site-step'));
-    } else if (sites.length === 0) {
-      show($('setup-screen'));
-      hide($('app-screen'));
-      show($('setup-site-step'));
     } else {
       hide($('setup-screen'));
       show($('app-screen'));
@@ -54,15 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Events ──────────────────────────────────────────────────────────────────
   function bindEvents() {
-    // Setup: save API key
-    $('btn-save-apikey').addEventListener('click', () => {
-      const key = $('setup-apikey').value.trim();
-      if (!key) return showInlineError('setup-apikey', 'API 키를 입력하세요');
-      NoticeStore.setApiKey(key);
-      show($('setup-site-step'));
-      showStatus('API 키가 저장되었습니다', 'success');
-    });
-
     // Setup: add site
     $('btn-add-setup-site').addEventListener('click', () => {
       addSiteFromInputs('setup-url', 'setup-name');
@@ -70,9 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Setup: start
     $('btn-start').addEventListener('click', () => {
-      const apiKey = NoticeStore.getApiKey();
       const sites = NoticeStore.getSites();
-      if (!apiKey) return showInlineError('setup-apikey', 'API 키를 먼저 저장하세요');
       if (sites.length === 0) return showInlineError('setup-url', '사이트를 먼저 추가하세요');
       hide($('setup-screen'));
       show($('app-screen'));
@@ -251,7 +215,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Sort: NEW first, then by fetchedAt desc
     notices.sort((a, b) => {
-      if (a.isNew !== b.isNew) return a.isNew ? -1 : 1;
+      const aNew = isRecent(a.postedAt);
+      const bNew = isRecent(b.postedAt);
+      if (aNew !== bNew) return aNew ? -1 : 1;
+      if (a.postedAt && b.postedAt) return b.postedAt.localeCompare(a.postedAt);
       return new Date(b.fetchedAt) - new Date(a.fetchedAt);
     });
 
@@ -269,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Update count
-    const newCount = notices.filter(n => n.isNew).length;
+    const newCount = notices.filter(n => isRecent(n.postedAt)).length;
     $('notice-count').textContent = newCount > 0
       ? `${notices.length}개 공지 (${newCount}개 신규)`
       : `${notices.length}개 공지`;
@@ -284,7 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     card.innerHTML = `
       <div class="card-top">
-        ${notice.isNew ? '<span class="badge-new">NEW</span>' : ''}
+        ${isRecent(notice.postedAt) ? '<span class="badge-new">NEW</span>' : ''}
         <span class="cat-tag cat-${notice.category}">${notice.category}</span>
         <span class="card-source">${escapeHtml(notice.sourceName)}</span>
       </div>
@@ -292,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="card-summary">${escapeHtml(notice.summary)}</div>
       <div class="card-bottom">
         <span class="card-deadline${urgent ? ' urgent' : ''}">
-          ${notice.deadline ? `📅 ${notice.deadline}` : ''}
+          ${notice.postedAt ? `🗓 ${notice.postedAt}` : ''}${notice.deadline ? ` · 마감 ${notice.deadline}` : ''}
         </span>
         <div class="card-actions">
           <button class="btn-cal" data-id="${notice.id}">📅 캘린더</button>
@@ -401,13 +368,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Refresh all ──────────────────────────────────────────────────────────────
   async function refreshAll() {
-    const apiKey = NoticeStore.getApiKey();
     const sites = NoticeStore.getSites();
 
-    if (!apiKey) {
-      showStatus('API 키를 먼저 설정해주세요', 'error');
-      return;
-    }
     if (sites.length === 0) {
       showStatus('사이트를 먼저 등록해주세요', 'warn');
       return;
@@ -420,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let totalNew = 0;
     const errors = [];
 
-    console.log(`[App] 새로고침 시작 - 사이트 ${sites.length}개, API키: ${apiKey.slice(0,12)}...`);
+    console.log(`[App] 새로고침 시작 - 사이트 ${sites.length}개`);
 
     for (const site of sites) {
       try {
@@ -428,7 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(`[App] ${site.name} HTML 가져오는 중...`);
         const html = await FetchAgent.fetch(site.url);
         console.log(`[App] ${site.name} HTML 수신: ${html.length}자`);
-        const notices = await ExtractAgent.extract(html, site, apiKey);
+        const notices = await ExtractAgent.extract(html, site);
         console.log(`[App] ${site.name} 공지 추출: ${notices.length}개`, notices);
         const added = NoticeStore.addNotices(notices);
         console.log(`[App] ${site.name} 저장: ${added}개 신규`);
@@ -495,6 +457,12 @@ document.addEventListener('DOMContentLoaded', () => {
   function isUrgent(deadline) {
     const diff = new Date(deadline) - new Date();
     return diff >= 0 && diff < 7 * 24 * 60 * 60 * 1000;
+  }
+
+  function isRecent(postedAt) {
+    if (!postedAt) return false;
+    const diff = new Date() - new Date(postedAt);
+    return diff >= 0 && diff < 3 * 24 * 60 * 60 * 1000;
   }
 
   function formatDate(isoString) {
